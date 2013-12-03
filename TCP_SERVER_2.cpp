@@ -39,6 +39,7 @@ DWORD WINAPI ToClient(LPVOID client_socket)
 	int sizeseek=0;
 	int size=0;
 	int control=0;
+	u_long OOB = 1;
 	control=recv( my_sock, infosize, sizeof(infosize), 0 );
 	if(control==0||control==-1)
 	{ 
@@ -67,6 +68,16 @@ DWORD WINAPI ToClient(LPVOID client_socket)
 		fclose(in);
 		sizeseek-=control;
 		send(my_sock,"*",sizeof(char),0);
+///////////////////////////////////////////////////////////////////////////////
+		ioctlsocket(my_sock, SIOCATMARK, &OOB);
+		if(!OOB)
+		{
+			/*int xuy=recv(my_sock, infosize, sizeof(infosize), MSG_OOB);
+			printf("Out of band data:%s                  adopted\n",infosize);*/
+			recv(my_sock, infosize, sizeof(infosize), MSG_OOB);
+			printf("Out of band data:%c                  adopted\n",infosize[0]);
+		}
+///////////////////////////////////////////////////////////////////////////////
 	}
 	return 0;
 }

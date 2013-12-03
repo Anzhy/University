@@ -17,7 +17,7 @@ int main(int argv[], char *argc[])
     peer.sin_addr.S_un.S_addr = inet_addr("192.168.1.13"); 
     int rc = connect(s,(struct sockaddr*) &peer, sizeof(peer));
     if (rc<0)
-		printf ("error");
+		printf ("error\n");
 ///////////////////////////////////////////////////////////////////////////////
     char buffer[1024];
 	char infosize[50];
@@ -55,6 +55,20 @@ int main(int argv[], char *argc[])
 			getch();
 			return 0;
 		}
+///////////////////////////////////////////////////////////////////////////////
+		if (kbhit())
+		{
+			getch();
+			char asd[1];
+			asd[0]='#';
+			/*int oobout=ftell(in);
+			itoa (oobout, infosize, 10);
+			send(s, infosize, strlen(infosize), MSG_OOB);
+			printf("Out of band data:%d                  sent\n",oobout);*/
+			send(s, asd, sizeof(char), MSG_OOB);
+			printf("Out of band data:#                  sent\n");
+		}
+///////////////////////////////////////////////////////////////////////////////
 	}
 	fclose(in);
 	return 0;     

@@ -1,3 +1,4 @@
+#include <ws2tcpip.h> 
 #include <stdio.h>
 #include <conio.h>
 #include <WinSock2.h>
@@ -5,6 +6,7 @@
 int fillingTheBuffer(char *buffer);
 DWORD WINAPI receivingDatagrams(LPVOID ss);
 static int PORT;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main(int *argc, char **argv)
 {
 	PORT = atoi(argv[1]);
@@ -15,31 +17,39 @@ int main(int *argc, char **argv)
 		return -1;
 	}
 	SOCKET s;
-	s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	s = socket(AF_INET, SOCK_DGRAM, 0);
 	if(!s)
 	{
 		printf("error socket");
 		return -1;
 	}
-	int tm = 1;
-    int y=setsockopt(s,SOL_SOCKET,SO_BROADCAST,(char*)&tm,sizeof(tm)); //ƒл€ манипул€ции флагами на уровне сокета задаетс€ как SOL_SOCKET.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	char ac[80];
+    gethostname(ac, sizeof(ac));
+    hostent *phe = gethostbyname(ac);
+	char *ipaddr = inet_ntoa(*((in_addr*)phe->h_addr_list[0]));
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	sockaddr_in sen;
 	memset(&sen, 0, sizeof(sen));
 	sen.sin_family = AF_INET;
 	sen.sin_port = htons(atoi(argv[1]));
-	sen.sin_addr.s_addr = INADDR_ANY;//inet_addr("192.168.1.2");//INADDR_BROADCAST;
+	sen.sin_addr.s_addr = inet_addr(ipaddr);
 	int error = bind(s, (struct sockaddr*)&sen, sizeof(sen));
 	if(error == -1)
 	{
 		printf("error bind");
 		return -1;
 	}
+	ip_mreq mreq;
+	mreq.imr_multiaddr.s_addr = inet_addr("234.5.6.7");
+	mreq.imr_interface.s_addr = INADDR_ANY;
+	int t=setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char*)&mreq, sizeof(mreq));
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	sockaddr_in ren;
 	memset(&ren, 0, sizeof(ren));
 	ren.sin_family = AF_INET;
 	ren.sin_port = htons(atoi(argv[1]));
-	ren.sin_addr.s_addr = inet_addr("192.168.1.255");//INADDR_BROADCAST;
+	ren.sin_addr.s_addr = inet_addr("234.5.6.7");
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	char buffer[255];
 	DWORD thID;
@@ -90,7 +100,7 @@ DWORD WINAPI receivingDatagrams(LPVOID ss)
 	sockaddr_in ren;
 	ren.sin_family = AF_INET;
     ren.sin_port = htons(PORT);
-	ren.sin_addr.s_addr = INADDR_ANY;
+	ren.sin_addr.s_addr = inet_addr("234.5.6.7");
 	int sizeRen[1];
 	sizeRen[0] = sizeof(ren);
 	while(1)
